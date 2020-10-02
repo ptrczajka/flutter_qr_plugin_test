@@ -1,0 +1,82 @@
+group 'com.example.flutter_plugin_sample_qr'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    ext.kotlin_version = '1.3.50'
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 28
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 24
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation("com.journeyapps:zxing-android-embedded:${getQRPropertyValue("versionKey")}") { transitive = false }
+    implementation 'androidx.appcompat:appcompat:1.0.2'
+    implementation 'com.google.zxing:core:3.3.0'
+}
+
+def getQRPropertyValue(propertyName) {
+    Properties qrProperties = new Properties()
+    File qrPropertiesFile = file("${project.rootDir}/qr_sample.properties")
+    if (!qrPropertiesFile.exists()) {
+        throw new GradleException("qr_sample.properties file doesn't exist, please put it to Android project root location")
+    } else if (!qrPropertiesFile.canRead()) {
+        throw new GradleException("no read access for qr_sample.properties")
+    }
+    qrProperties.load(new FileInputStream(file("${project.rootDir}/qr_sample.properties")))
+    if(!qrProperties.containsKey(propertyName)) {
+        throw new GradleException("please add $propertyName property in qr_sample.properties")
+    } else if (qrProperties.getProperty(propertyName, '').isEmpty()) {
+        throw new GradleException("please provide value for $propertyName")
+    }
+    println "value for $propertyName = ${qrProperties.getProperty(propertyName)}"
+    return qrProperties.getProperty(propertyName)
+}
+
+def showLocations() {
+    println  "Root project:   ${project.rootProject}";
+    println  "  rootDir:      ${project.rootDir}"
+    println  "  projectDir:   ${project.projectDir}";
+    println  "  project dir:  ${System.getProperty("user.dir")}"
+
+    Properties mjscProperties = new Properties()
+    mjscProperties.load(new FileInputStream(file("${project.rootDir}/qr_sample.properties")))
+
+    println  "versionKey ${mjscProperties['versionKey']}"
+
+    //def jsonFile = file("${project.rootProject}/../../example/configGbg/mjsc_config.json")
+    def jsonFile = file("${project.rootDir}/../mjsc_config.json")
+    def json = new groovy.json.JsonSlurper().parseText(jsonFile.text)
+    println json.accessKey
+    return json
+}
