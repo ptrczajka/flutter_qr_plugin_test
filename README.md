@@ -1,0 +1,1 @@
+# flutter_qr_plugin_test
